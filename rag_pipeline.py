@@ -1,7 +1,9 @@
-import weaviate
-import openai
 import json
 import os
+
+import weaviate
+import openai
+
 
 # Initialize Weaviate client (v3 syntax)
 client = weaviate.Client("http://localhost:9090")
