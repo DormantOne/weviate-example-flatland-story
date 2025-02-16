@@ -5,8 +5,9 @@ echo "🚀 Starting Flatland Explorer..."
 # 1. Activate virtual environment
 source venv/bin/activate
 
-# 2. Export vars from .env
-export $(grep -v '^#' .env | xargs)
+set -a  # Automatically export all variables
+source .env
+set +a  # Stop automatically exporting
 
 # 3. Start Weaviate if not running
 echo "Starting Weaviate..."

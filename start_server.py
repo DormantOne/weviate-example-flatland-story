@@ -16,6 +16,7 @@ def start_services():
 
     # Configure ngrok
     print("Configuring ngrok...")
+    print(os.getenv("NGROK_AUTH_TOKEN"), file=sys.stderr)
     subprocess.run(
         ["./ngrok", "authtoken", os.getenv("NGROK_AUTH_TOKEN")],
         stdout=subprocess.PIPE,
