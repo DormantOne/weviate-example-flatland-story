@@ -1,0 +1,11 @@
+# MacOS
+.DS_Store
+
+# Secrets, Tokens, and API Keys
+.env
+
+
+# Log Files
+
+nohup.out
+.cache_ggshield

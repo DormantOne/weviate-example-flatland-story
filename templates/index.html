@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flatland AI Explorer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-right: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .tabs {
+            display: flex;
+            margin-top: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+        .tab {
+            padding: 10px;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            background: #ddd;
+            border-radius: 5px 5px 0 0;
+        }
+        .tab.active {
+            background: #007BFF;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 0 0 5px 5px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .passage {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .passage:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Flatland AI Explorer</h1>
+    <input type="text" id="question" placeholder="Ask a question about Flatland">
+    <button onclick="askQuestion()">🔍 Explore</button>
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('answer')">AI Answer</div>
+        <div class="tab" onclick="switchTab('process')">Search Process</div>
+        <div class="tab" onclick="switchTab('sources')">Source Texts</div>
+    </div>
+
+    <div id="answer" class="tab-content active">
+        <h2>AI Answer</h2>
+        <p id="ai-answer">Ask a question to get a response!</p>
+    </div>
+
+    <div id="process" class="tab-content">
+        <h2>Search Process</h2>
+        <p id="search-process">Query execution details will appear here.</p>
+    </div>
+
+    <div id="sources" class="tab-content">
+        <h2>Source Texts</h2>
+        <div id="source-passages"></div>
+    </div>
+</div>
+
+<script>
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function askQuestion() {
+        const question = document.getElementById("question").value;
+        fetch("/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Update AI Answer tab
+            document.getElementById("ai-answer").innerHTML = `
+                <h3>Question:</h3>
+                <p>${data.question}</p>
+                <h3>Answer:</h3>
+                <p>${data.answer}</p>
+            `;
+            
+            // Update Search Process tab
+            let processHTML = `
+                <h3>🔍 Generated Search Queries:</h3>
+                <ul>
+                ${data.search_process.queries.map((query, i) => `
+                    <li>${query}</li>
+                `).join('')}
+                </ul>
+
+                <h3>🎯 Relevant Passages Found:</h3>
+                <ul>
+                ${data.search_process.chunk_details.map(detail => `
+                    <li>
+                        Chunk ${detail.chunk_number} - ${detail.title}<br>
+                        Match: ${(detail.certainty * 100).toFixed(1)}% for query: ${detail.query}
+                    </li>
+                `).join('')}
+                </ul>
+            `;
+            document.getElementById("search-process").innerHTML = processHTML;
+
+            // Update Source Texts tab
+            let sourceHTML = `
+                <h3>📚 Source Passages:</h3>
+                ${data.search_process.source_texts.map(chunk => `
+                    <div class='passage'>
+                        <h4>${chunk.title}</h4>
+                        <p><strong>Key Terms:</strong> ${chunk.key_terms.join(', ')}</p>
+                        <p><strong>Description:</strong> ${chunk.description}</p>
+                        <p><strong>Content:</strong></p>
+                        <p>${chunk.content}</p>
+                        <hr>
+                    </div>
+                `).join('')}
+            `;
+            document.getElementById("source-passages").innerHTML = sourceHTML;
+
+            switchTab('answer');
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            document.getElementById("ai-answer").innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        });
+    }
+</script>
+
+</body>
+</html>
